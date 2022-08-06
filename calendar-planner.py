@@ -1,6 +1,8 @@
 # Importing The Essential Libraries
 from tkinter import *
+from typing import List
 from tkcalendar import Calendar, DateEntry
+from datetime import datetime
 
 #ADD TASK PAGE
 
@@ -52,15 +54,24 @@ def add_task():
     confirmed_task_label = Label(top, wraplength=300)
     back_to_calendar_button = Button(top, text="Back to Calendar", command=top.destroy)
     enter_another_task_button = Button(top, text="Create Another Task", command=create_another_task)
- 
-def print_tasks():
-    task_text = ''
-    for day in task_dict:
-        date_tasks = ''
-        for task in task_dict[day]:
-            date_tasks += f', {task}'
-        task_text += f'On {day}: {date_tasks[2:]}\n'
-    Label(tk, text=task_text).grid(row=3)
+
+def show_task_list():
+    top = Toplevel(tk)
+    top.geometry('400x400')
+    task_list_label = Label(top, text="Your Task List", anchor=CENTER, font=("Helvetica 18 underline"))
+    task_list_label.pack(pady = 20)
+    task_listbox = Listbox(top)
+
+    task_dict_sorted = {}
+    for date in sorted(task_dict):
+        task_dict_sorted[date] = task_dict[date]
+    for day in task_dict_sorted:
+        for task in task_dict_sorted[day]:
+            task_listbox.insert(END, f'{day.strftime("%d/%m/%Y")}: {task}')
+
+    task_listbox.pack(pady=15)
+    
+
 
 def delete_tasks():
     pass;
@@ -97,7 +108,7 @@ Button(tk, text = "Get Date", command = grad_date).grid(row=1, column=0)
 Button(tk, text="Add Task", command=add_task).grid(row=1, column=1)
 task_dict = {}
 
-Button(tk, text="Task List", command=print_tasks).grid(row=2, column=0)
+Button(tk, text="Task List", command=show_task_list).grid(row=2, column=0)
 
 Button(tk, text="Delete Tasks", command=delete_tasks).grid(row=2, column=1)
  
