@@ -2,6 +2,7 @@
 from tkinter import *
 from tkcalendar import Calendar, DateEntry
 from datetime import datetime
+from tkinter import font
 
 #ADD TASK PAGE
 def add_back_to_calendar_button(master):
@@ -89,7 +90,7 @@ def show_task_list():
     task_list_label.pack(pady = 20)
 
     global task_listbox
-    task_listbox = Listbox(tasks_list_frame, width=40, yscrollcommand=tasks_list_scrollbar.set)
+    task_listbox = Listbox(tasks_list_frame, width=40, font=big_font, yscrollcommand=tasks_list_scrollbar.set)
     tasks_list_scrollbar.config(command=task_listbox.yview)
     task_listbox.bind('<<ListboxSelect>>', items_selected)
 
@@ -100,7 +101,13 @@ def show_task_list():
         task_dict_sorted[date] = task_dict[date]
     for day in task_dict_sorted:
         for task in task_dict_sorted[day]:
-            task_listbox.insert(END, f'{day.strftime("%d/%m/%Y")}: {task}')
+            if '\u0336' not in task:
+                task_listbox.insert(END, f'{day.strftime("%d/%m/%Y")}: {task}')
+    for day in task_dict_sorted:
+        for task in task_dict_sorted[day]:
+            if '\u0336' in task:
+                completed_task = day.strftime("%d/%m/%Y") + ':' + task
+                task_listbox.insert(END, strike(completed_task))
     
     tasks_list_scrollbar.pack(side=RIGHT, fill=Y)
     tasks_list_frame.pack()
@@ -144,14 +151,19 @@ def delete_tasks_window():
     task_list_label = Label(top, text="Delete from your task list", anchor=CENTER, font=("Helvetica 18 underline"))
     task_list_label.pack(pady = 20)
     global task_listbox
-    task_listbox = Listbox(tasks_list_frame, width=40, yscrollcommand=tasks_list_scrollbar.set)
+    task_listbox = Listbox(tasks_list_frame, font=big_font, width=40, yscrollcommand=tasks_list_scrollbar.set)
     task_listbox.bind('<<ListboxSelect>>', items_selected)
     tasks_list_scrollbar.config(command=task_listbox.yview)
     
-
     for day in task_dict_sorted:
         for task in task_dict_sorted[day]:
-            task_listbox.insert(END, f'{day.strftime("%d/%m/%Y")}: {task}')
+            if '\u0336' not in task:
+                task_listbox.insert(END, f'{day.strftime("%d/%m/%Y")}: {task}')
+    for day in task_dict_sorted:
+        for task in task_dict_sorted[day]:
+            if '\u0336' in task:
+                completed_task = day.strftime("%d/%m/%Y") + ':' + task
+                task_listbox.insert(END, strike(completed_task))
         
     tasks_list_scrollbar.pack(side=RIGHT, fill=Y)
     tasks_list_frame.pack()
@@ -166,22 +178,42 @@ def delete_tasks_window():
     add_back_to_calendar_button(top)
     
 def show_tasks_for_day():
-
     top = Toplevel(tk)
     tasks_list_frame = Frame(top)
     tasks_list_scrollbar = Scrollbar(tasks_list_frame, orient=VERTICAL)
     task_complete_label = Label(top, text='')
-    task_listbox_day = Listbox(tasks_list_frame, width=40, yscrollcommand=tasks_list_scrollbar.set)
+    task_listbox_day = Listbox(tasks_list_frame, width=40, font = big_font, yscrollcommand=tasks_list_scrollbar.set)
     
 
     def complete_task():
-        task_completed = strike(task_listbox_day.get(ANCHOR))
+        task_completed = task_listbox_day.get(ANCHOR)
         task_completed_index = task_listbox_day.get(0, END).index(task_completed)
-        task_listbox_day.insert(task_completed, END)
+        task_completed_strike = strike(task_completed)
+        task_listbox_day.insert(END, task_completed_strike)
         task_listbox_day.delete(task_completed_index)
         task_complete_label.config(text=f'{task_listbox_day.get(ANCHOR)} has been completed')
 
+        #global task_dict, task_dict_sorted
+        #task_dict[date_obj].append(task_completed_strike) UPDATES TASK_DICT TOO
+        task_dict_sorted[date_obj].append(task_completed_strike)
+        #task_dict[date_obj].remove(task_completed)
+        task_dict_sorted[date_obj].remove(task_completed)
+
+    def delete_completed_tasks():
+        day_tasks = task_dict_sorted[date_obj].copy()
+        day_tasks.reverse()
+        for task in day_tasks:
+            if '\u0336' in task:
+                task_dict_sorted[date_obj].remove(task)
+                task_index = task_listbox_day.get(0, END).index(task)
+                task_listbox_day.delete(task_index)
+
+                main_cal.calevent_remove(date=date_obj)
+                for task in task_dict_sorted[date_obj]:
+                    main_cal.calevent_create(date_obj, task, 'reminder')
+        
     complete_button = Button(top, text='Complete Task', command=complete_task)
+    delete_completed_tasks_button = Button(top, text='Delete All Completed Tasks', command=delete_completed_tasks)
     date = main_cal.get_date()
     date_obj =  datetime.strptime(date, '%d-%m-%Y').date()
     if date_obj in task_dict_sorted:
@@ -211,15 +243,22 @@ def show_tasks_for_day():
         task_complete_label.config(text="Your task list is empty!")
         complete_button['state'] = 'disable'
     complete_button.pack()
+    delete_completed_tasks_button.pack()
     add_back_to_calendar_button(top)
 
 def show_tasks_for_week():
-    pass;
+    dates_list = []
+    print(main_cal.get_date() + datetime.timedelta(days=1))
+    for _ in range(7):
+        new_date = main_cal.get_date() + main_cal.timedelta(days=_)
+        dates_list.append(new_date)
+    print(dates_list)
 
 
 # Create The Gui Object
 tk = Tk()
 tk.update_idletasks()
+big_font = font.Font(size=15)
  
 # Set the geometry of the GUI Interface
 tk.geometry("700x700")
@@ -231,7 +270,6 @@ background = '#00008B', foreground = 'white',
 headersbackground = '#A7C7E7', headersforeground = 'black',
 weekendbackground = '#f6f6f6', othermonthbackground = '#ececec',
 othermonthwebackground = '#e2e2e2', cursor='hand1' )
-calevent_dict = {}
  
 #cal.pack(pady = 100, fill="both", expand=True)
 main_cal.grid(row=0, column=0, columnspan=2, sticky='WENS', pady = 50)
