@@ -19,12 +19,18 @@ def strike(text):
 def add_task():
     def confirm_task():
         no_task_label.pack_forget()
+        repeated_task_label.pack_forget()
+        confirmed_task_label.config(text='')
         if user_task_input_entry.get() == '':
             no_task_label.pack()
             return
-        text = user_task_input_entry.get() + ' on ' + cal.get_date().strftime("%d/%m/%Y") + ' added to calendar'
+        if cal.get_date() in task_dict_sorted:
+            if user_task_input_entry.get() in task_dict_sorted[cal.get_date()]:
+                repeated_task_label.pack()
+                return
+        text = user_task_input_entry.get() + ' on ' + cal.get_date().strftime("%d-%m-%Y") + ' added to calendar'
         confirmed_task_label.config(text=text)
-        confirmed_task_label.pack(pady=10)
+        confirmed_task_label.pack()
 
         main_cal.tag_config('reminder', background='red', foreground='yellow')
         if cal.get_date() in task_dict:
@@ -36,8 +42,7 @@ def add_task():
             task_dict[cal.get_date()] = [user_task_input_entry.get()]
             main_cal.calevent_create(cal.get_date(), user_task_input_entry.get(), 'reminder')
 
-        global task_dict_sorted
-        task_dict_sorted = {}
+        
         for date in sorted(task_dict):
             task_dict_sorted[date] = task_dict[date]
 
@@ -63,13 +68,14 @@ def add_task():
     user_task_input_entry.pack(pady=20)
 
     cal = DateEntry(top, width=30, background='darkblue',
-                    foreground='white', borderwidth=2, date_pattern='dd/mm/yyyy')
+                    foreground='white', borderwidth=2, date_pattern='dd-mm-yyyy')
     cal.set_date(date_from_main)
     cal.pack(padx=10, pady=10)  
 
     confirm_button = Button(top, text="Confirm", command=confirm_task)
     confirm_button.pack(pady=10)
     no_task_label = Label(top, text="Input some task please!")
+    repeated_task_label = Label(top, text="This is a repeated task. Input a different task!", wraplength=150)
 
     confirmed_task_label = Label(top, wraplength=300)
     back_to_calendar_button = Button(top, text="Back to Calendar", command=top.destroy)
@@ -103,11 +109,11 @@ def show_task_list():
     for day in task_dict_sorted:
         for task in task_dict_sorted[day]:
             if '\u0336' not in task:
-                task_listbox.insert(END, f'{day.strftime("%d/%m/%Y")}: {task}')
+                task_listbox.insert(END, f'{day.strftime("%d-%m-%Y")}: {task}')
     for day in task_dict_sorted:
         for task in task_dict_sorted[day]:
             if '\u0336' in task:
-                completed_task = day.strftime("%d/%m/%Y") + ':' + task
+                completed_task = day.strftime("%d-%m-%Y") + ':' + task
                 task_listbox.insert(END, strike(completed_task))
     
     tasks_list_scrollbar.pack(side=RIGHT, fill=Y)
@@ -122,7 +128,7 @@ def delete_tasks_window():
     def delete_task():
         if task_listbox.get(ANCHOR):
             task_date, task = task_listbox.get(ANCHOR).split(': ', 1)
-            task_date_object = datetime.strptime(task_date, '%d/%m/%Y').date()
+            task_date_object = datetime.strptime(task_date, '%d-%m-%Y').date()
             global task_dict
             global task_dict_sorted
             task_dict[task_date_object].remove(task)
@@ -132,7 +138,7 @@ def delete_tasks_window():
             for task in task_dict_sorted[task_date_object]:
                 main_cal.calevent_create(task_date_object, task, 'reminder')
 
-            task_delete_label.config(text=f'{task_listbox.get(ANCHOR)} has been deleted.')
+            task_delete_label.config(text=f'{task_date}: {task} has been deleted.')
             task_listbox.delete(ANCHOR)
 
             if task_listbox.size() == 0:
@@ -159,11 +165,11 @@ def delete_tasks_window():
     for day in task_dict_sorted:
         for task in task_dict_sorted[day]:
             if '\u0336' not in task:
-                task_listbox.insert(END, f'{day.strftime("%d/%m/%Y")}: {task}')
+                task_listbox.insert(END, f'{day.strftime("%d-%m-%Y")}: {task}')
     for day in task_dict_sorted:
         for task in task_dict_sorted[day]:
             if '\u0336' in task:
-                completed_task = day.strftime("%d/%m/%Y") + ':' + task
+                completed_task = day.strftime("%d-%m-%Y") + ':' + task
                 task_listbox.insert(END, strike(completed_task))
         
     tasks_list_scrollbar.pack(side=RIGHT, fill=Y)
@@ -201,7 +207,7 @@ def show_tasks_for_day():
         task_completed_strike = strike(task_completed)
         task_listbox_day.insert(END, task_completed_strike)
         task_listbox_day.delete(task_completed_index)
-        task_complete_label.config(text=f'{task_listbox_day.get(ANCHOR)} has been completed')
+        task_complete_label.config(text=f'{task_completed} has been completed')
 
         #global task_dict, task_dict_sorted
         #task_dict[date_obj].append(task_completed_strike) UPDATES TASK_DICT TOO
@@ -240,7 +246,11 @@ def show_tasks_for_day():
     date_obj =  datetime.strptime(date, '%d-%m-%Y').date()
     if date_obj in task_dict_sorted:
         for task in task_dict_sorted[date_obj]:
-            task_listbox_day.insert(END, task)
+            if '\u0336' not in task:
+                task_listbox_day.insert(END, task)
+        for task in task_dict_sorted[date_obj]:
+            if '\u0336' in task:
+                task_listbox_day.insert(END, task)
     else:
         task_complete_label.config(text='No tasks for the day')
 
@@ -284,8 +294,6 @@ def show_tasks_for_day():
 
 
 #SHOW TASKS FOR THE WEEK    
-#ADD DATES TO THE LISTBOX, TITLE, MAKE SURE WHEN TASK COMPLETES, IT GETS REMOVED CORRECTLY
-#FROM TASK_DICT
 def show_tasks_for_week():
 
     dates_list = []
@@ -295,12 +303,14 @@ def show_tasks_for_week():
         dates_list.append(new_date)
         if new_date.weekday() == 6:
             break;
+    selected_date = dates_list[0].strftime("%d-%m-%Y")
+    end_date = dates_list[-1].strftime("%d-%m-%Y")
     
 
     top = Toplevel(tk)
     tasks_list_frame = Frame(top)
     tasks_list_scrollbar = Scrollbar(tasks_list_frame, orient=VERTICAL)
-    task_list_label = Label(top, text="Your Task List for the week", anchor=CENTER, font=("Helvetica 18 underline"))
+    task_list_label = Label(top, text=f"Task List for the week: {selected_date} to {end_date}", anchor=CENTER, font=("Helvetica 14 underline"))
     task_list_label.pack(pady = 20)
     task_complete_label = Label(top, text='')
 
@@ -325,13 +335,14 @@ def show_tasks_for_week():
         task_completed_strike = strike(task_completed)
         task_listbox.insert(END, task_completed_strike)
         task_listbox.delete(task_completed_index)
-        task_complete_label.config(text=f'{task_listbox.get(ANCHOR)} has been completed')
+        task_date, task_details = task_completed.split(': ')
+        task_complete_label.config(text=f'{task_completed} has been completed')
 
-        
+        task_date_obj = datetime.strptime(task_date, "%d-%m-%Y").date()
         #task_dict[date_obj].append(task_completed_strike) UPDATES TASK_DICT TOO
-        task_dict_sorted[date_obj].append(task_completed_strike)
+        task_dict_sorted[task_date_obj].append(strike(task_details))
         #task_dict[date_obj].remove(task_completed)
-        task_dict_sorted[date_obj].remove(task_completed)
+        task_dict_sorted[task_date_obj].remove(task_details)
         delete_completed_tasks_button['state'] = 'normal'
         complete_button['state'] = 'disable'
         for date in dates_list:
@@ -343,20 +354,31 @@ def show_tasks_for_week():
 
     def delete_completed_tasks():
         complete_button['state'] = 'disable'
-        day_tasks = task_dict_sorted[date_obj].copy()
+        day_tasks = []
+        for date in dates_list:
+            if date in task_dict_sorted:
+                for task in task_dict_sorted[date]:
+                    if '\u0336' in task:
+                        day_tasks.append(f'{date}: {task}')
+                    if '\u0336' not in task:
+                        complete_button['state'] = 'normal'
         day_tasks.reverse()
         for task in day_tasks:
-            if '\u0336' in task:
-                task_dict_sorted[date_obj].remove(task)
-                task_index = task_listbox.get(0, END).index(task)
-                task_listbox.delete(task_index)
+            date_str, task_details = task.split(': ')
+            date = datetime.strptime(date_str, "%Y-%m-%d").date()
+            date_listbox_plus_first_part = strike(date.strftime('%d-%m-%Y')) + strike(': ')
+            task_index = task_listbox.get(0, END).index(f'{date_listbox_plus_first_part}{task_details}')
+            task_listbox.delete(task_index)
+            task_dict_sorted[date].remove(task_details)
 
-                main_cal.calevent_remove(date=date_obj)
-                for task in task_dict_sorted[date_obj]:
-                    main_cal.calevent_create(date_obj, task, 'reminder')
+            
 
-                if '\u0336' not in task:
-                    complete_button['state'] = 'normal'
+            main_cal.calevent_remove(date=date)
+            for task in task_dict_sorted[date]:
+                main_cal.calevent_create(date, task, 'reminder')
+
+                
+
         delete_completed_tasks_button['state'] = 'disable'
         if task_listbox.size() == 0:
             task_complete_label.config(text='No tasks for the week')
@@ -369,8 +391,18 @@ def show_tasks_for_week():
     
     for day in dates_list:
         if day in task_dict_sorted:
+            day_formatted = day.strftime("%d-%m-%Y")
             for task in task_dict_sorted[day]:
-                task_listbox.insert(END, task)
+                if '\u0336' not in task:
+                    task_listbox.insert(END, f'{day_formatted}: {task}')
+    for day in dates_list:
+        if day in task_dict_sorted:
+            day_formatted = day.strftime("%d-%m-%Y")
+            for task in task_dict_sorted[day]:
+                if '\u0336' in task:
+                    striked_first_part = strike(day_formatted) + strike(': ')
+                    task_listbox.insert(END, f'{striked_first_part}{task}')
+
     if task_listbox.size() == 0:
         task_complete_label.config(text='No tasks for the day')
         complete_button['state'] = 'disable'
