@@ -1,6 +1,19 @@
 
 <img src="https://github.com/HJH-08/calendar-planner/blob/main/%F0%9F%93%86_Calendar_Planner.png" width='1200' height = '300'>
 
+<br>
+<p align="center">
+    <img src="https://img.shields.io/github/last-commit/hjh-08/calendar-planner" />
+    <img src="https://img.shields.io/github/repo-size/hjh-08/calendar-planner">
+<p>
+
+
+<p align="center">
+  <a href="#calendar-planner">About</a> •
+  <a href="#recording-of-the-calendar-planner-in-use">Visuals</a> •
+  <a href="#prerequisities">Prerequisites</a> •
+  <a href="#how-to-run-the-script">Instructions</a> 
+</p>
 
 # Calendar Planner
 
