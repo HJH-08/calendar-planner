@@ -1,5 +1,5 @@
 
-<img src="https://github.com/HJH-08/calendar-planner/blob/main/%F0%9F%93%86_Calendar_Planner.png" width='1200' height = '200'>
+<img src="https://github.com/HJH-08/calendar-planner/blob/main/%F0%9F%93%86_Calendar_Planner.png" width='1200' height = '300'>
 
 
 # Calendar Planner
