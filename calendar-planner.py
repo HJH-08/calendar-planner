@@ -5,10 +5,10 @@ from datetime import datetime
 from tkinter import font
 import json
 
-#Global variables for the task dict
+# Global variables for the task dict
 task_dict = {}
 
-#Defining methods to strikethrough and unstrikethrough text
+# Defining methods to strikethrough and unstrikethrough text
 def strike(text):
     result = ''
     for c in text:
@@ -19,23 +19,31 @@ def unstrike(text):
     newtext = text.replace('\u0336', '')
     return newtext
 
-#Defining method for setting up listbox by taking date and tasks from a dictionary
+# Defining method for setting up listbox by taking date and tasks from a dictionary
 
 def set_up_listbox(dictionary, listbox):
-    #Inserting uncompleted tasks into the listbox, arranging by date
+    # Inserting uncompleted tasks into the listbox, arranging by date
     for day in dictionary:
         for task in dictionary[day]:
             if '\u0336' not in task:
                 listbox.insert(END, f'{day.strftime("%d-%m-%Y")}: {task}')
                 
-    #Inserting completed tasks below uncompleted ones into the listbox, arranging by date
+    # Inserting completed tasks below uncompleted ones into the listbox, arranging by date
     for day in dictionary:
         for task in dictionary[day]:
             if '\u0336' in task:
                 completed_task = day.strftime("%d-%m-%Y") + ': ' + task
                 listbox.insert(END, strike(completed_task))
 
-#Defining methods to import dictionary containing saved tasks from the saved json file
+# Method to check if listbox is empty, and if it is update the labels accordingly
+def check_if_listbox_empty(listbox, label, time_period = 0):
+    if listbox.size() == 0:
+        if time_period == 0:
+            label.config(text='Your task list is empty. Add some tasks in the add tasks window!')
+        else:
+            label.config(text=f'No tasks for the {time_period}')
+
+# Defining methods to import dictionary containing saved tasks from the saved json file
 def update_task_dicts():
     try:
         with open('tasks.json') as json_file:
@@ -46,7 +54,7 @@ def update_task_dicts():
     except:
         return;
 
-#Method to save info inputted in this session, close the window and update the tasks.json file
+# Method to save info inputted in this session, close the window and update the tasks.json file
 def save_and_close():
     exported_dict = {}
     task_dict_sorted = dict(sorted(task_dict.items()))
@@ -56,28 +64,26 @@ def save_and_close():
             json.dump(exported_dict, outfile)
     tk.destroy()
 
-#Update calendar reminders
+# Update calendar reminders
 def update_calendar():
     for date in task_dict:
         for task in task_dict[date]:
             main_cal.calevent_create(date, task, 'reminder')
 
-#Add a back to calendar button
+# Add a back to calendar button
 def add_back_to_calendar_button(master):
     back_to_calendar_button = Button(master, text="Back to Calendar", command=master.destroy)
     back_to_calendar_button.pack()
 
 
-
-
 #BUTTON METHODS
 
-#Show instructions method
+# Show instructions method
 def show_instructions():
     top = Toplevel(tk)
     top.geometry('700x700')
 
-    #Blueprint for button to show and hide labels
+    # Blueprint for button to show and hide labels
     def make_button_and_label(about, text):
         def hide():
             info_label.config(text='')
@@ -93,7 +99,7 @@ def show_instructions():
             info_button.pack()
         info_label.pack(pady=5)
 
-    #Introduction
+    # Introduction
     intro_text = ("This is a calendar app planner. Blue on the calendar means selected date, and the default selected date is" 
     " today. Red on the calendar means there is a reminder on that date. Hover over that date and wait a few seconds for the" 
     " task(s) to show up. All tasks are saved in a json file called 'tasks.json', which you should"
@@ -102,21 +108,21 @@ def show_instructions():
     "tasks that you have inputted in that session to be lost.")
     make_button_and_label('Information', intro_text)    
 
-    #Add Tasks
+    # Add Tasks
     addtask_text = ("Add any task on any date using the add task button. The calendar will be updated when the added task is" 
     " confirmed. You cannot add any repeated tasks in any single day. Tasks are case sensitive.")
     make_button_and_label('About Add Tasks', addtask_text)
     
-    #Delete Tasks
+    # Delete Tasks
     deletetask_text = ("Select any task from the task list to delete. Upon confirmation, the task will be removed permenantly."
     " The calendar will automatically be updated.")
     make_button_and_label('About Delete Tasks', deletetask_text)
    
-    #Task list
+    # Task list
     tasklist_text = "This button shows you all your tasks that you have inputted in the planner."
     make_button_and_label('About Task List', tasklist_text)
 
-    #Task for the day
+    # Task for the day
     taskforday_text = ("This button will show you what tasks you have on any selected day. If you do not have any tasks," 
     " it will say that your task list is empty. You can choose to complete a task. By completing a task, the task will appear" 
     " cancelled, but it will still appear on the calendar. In order to delete a specific task, go to the delete tasks button"
@@ -124,19 +130,19 @@ def show_instructions():
     " delete all completed tasks at one go too.")
     make_button_and_label('About Task For The Day', taskforday_text)
     
-    #Task for the week
+    # Task for the week
     taskforweek_text = ("This button shows you the tasks you have from the selected day to the end of that particular week."
     " Functionalities are the same as the Show Task for Day button.")
     make_button_and_label('About Tasks For The Week', taskforweek_text)
     
-    #Save and close planner
+    # Save and close planner
     saveandclose_text = ("This button saves all your tasks and closes the planner. All information"
     " is saved in a json file named 'tasks.json', which will be in the same directory as your planner. "
     "Editing, opening, deleting or renaming the file may cause the planner to be unable to access saved tasks,"
     " and errors may occur.")
     make_button_and_label('About Save And Close Planner', saveandclose_text)
 
-    #Back to calendar button
+    # Back to calendar button
     add_back_to_calendar_button(top)
 
 
@@ -144,31 +150,31 @@ def show_instructions():
 
 def add_task():
 
-    #Confirm task button
+    # Confirm task button
     def confirm_task():
 
-        #Remove preexisting labels when user presses confirm task again
+        # Remove preexisting labels when user presses confirm task again
         no_task_label.pack_forget()
         repeated_task_label.pack_forget()
         confirmed_task_label.config(text='')
 
-        #If user does not input a task
+        # If user does not input a task
         if user_task_input_entry.get() == '':
             no_task_label.pack()
             return
 
-        #If user enters repeated task
+        # If user enters repeated task
         if cal.get_date() in task_dict:
             if user_task_input_entry.get() in task_dict[cal.get_date()]:
                 repeated_task_label.pack()
                 return
         
-        #User successfully enters task
+        # User successfully enters task
         text = user_task_input_entry.get() + ' on ' + cal.get_date().strftime("%d-%m-%Y") + ' added to calendar'
         confirmed_task_label.config(text=text)
         confirmed_task_label.pack()
 
-        #Update calendar and task_dict
+        # Update calendar and task_dict
         if cal.get_date() in task_dict:
             if user_task_input_entry.get() not in task_dict[cal.get_date()]:
                 task_dict[cal.get_date()].append(user_task_input_entry.get())
@@ -177,7 +183,7 @@ def add_task():
             task_dict[cal.get_date()] = [user_task_input_entry.get()]
             main_cal.calevent_create(cal.get_date(), user_task_input_entry.get(), 'reminder')
 
-        #Pack in enter another task button and repack back to calendar button nicely
+        # Pack in enter another task button and repack back to calendar button nicely
         back_to_calendar_button.pack_forget()
         back_to_calendar_button.pack(padx=30, side='left')
         enter_another_task_button.pack(padx=30, side='right')
@@ -249,8 +255,7 @@ def show_task_list():
     set_up_listbox(task_dict_sorted, task_listbox)
 
     # If listbox is empty, tell the user that the task list is empty
-    if task_listbox.size() == 0:
-        task_info_label.config(text="Your task list is empty. Input some tasks in the add tasks tab!")
+    check_if_listbox_empty(task_listbox, task_info_label)
     
     # Packing labels, scrollbar, frames and buttons into the task list window
     task_list_label.pack(pady = 20)
@@ -420,8 +425,7 @@ def show_tasks_for_day():
                 complete_button['state'] = 'normal'
         
         # Check if the task_listbox is empty
-        if task_listbox_day.size() == 0:
-            task_complete_label.config(text="Your task list is empty!")
+        check_if_listbox_empty(task_listbox_day, task_complete_label)
         
         
     # Show tasks for the day window with frame, scrollbar
@@ -479,8 +483,7 @@ def show_tasks_for_day():
     add_back_to_calendar_button(top)
 
     # If listbox is empty
-    if task_listbox_day.size() == 0:
-        task_complete_label.config(text="Your task list is empty!")
+    check_if_listbox_empty(task_listbox_day, task_complete_label)
     
     
     
@@ -571,71 +574,80 @@ def show_tasks_for_week():
             date_str, task_details = task.split(': ')
             date = datetime.strptime(date_str, "%Y-%m-%d").date()
             
-            # 
+            # Find the index of the completed task so it can be removed from the listbox
             date_listbox_plus_first_part = strike(date.strftime('%d-%m-%Y')) + strike(': ')
             task_index = task_listbox.get(0, END).index(f'{date_listbox_plus_first_part}{task_details}')
             task_listbox.delete(task_index)
+
+            # Remove completed task from task_dict and calendar
             task_dict[date].remove(task_details)
-
-            
-
             main_cal.calevent_remove(date=date)
             for task in task_dict[date]:
                 main_cal.calevent_create(date, task, 'reminder')
 
-                
-
+        # Disable delete completed task button as no more completed tasks are left        
         delete_completed_tasks_button['state'] = 'disable'
-        if task_listbox.size() == 0:
-            task_complete_label.config(text='No tasks for the week')
 
+        check_if_listbox_empty(task_listbox, task_complete_label, 'week')
+
+
+    # Tasks for the week window
     top = Toplevel(tk)
     top.geometry('550x550')
+
+    # Set up frames and scrollbars
     tasks_list_frame = Frame(top)
     tasks_list_scrollbar = Scrollbar(tasks_list_frame, orient=VERTICAL)
-    task_list_label = Label(top, text=f"Task List for the week: {selected_date} to {end_date}", anchor=CENTER, font=("Helvetica 14 underline"))
-    task_list_label.pack(pady = 20)
-    task_complete_label = Label(top, text='')
 
+    # Define labels and buttons in the tasks for the week window
+    task_list_label = Label(top, text=f"Task List for the week: {selected_date} to {end_date}", anchor=CENTER, font=("Helvetica 14 underline"))
+    task_complete_label = Label(top, text='')
+    complete_button = Button(top, state='disable', text='Complete Task', command=complete_task)
+    delete_completed_tasks_button = Button(top, text='Delete All Completed Tasks', state='disable', command=delete_completed_tasks)
+
+    # Set up listbox and bind the scrollbar to it
     task_listbox = Listbox(tasks_list_frame, width=40, font=big_font, yscrollcommand=tasks_list_scrollbar.set)
     tasks_list_scrollbar.config(command=task_listbox.yview)
     task_listbox.bind('<<ListboxSelect>>', items_selected)
-    complete_button = Button(top, state='disable', text='Complete Task', command=complete_task)
-    delete_completed_tasks_button = Button(top, text='Delete All Completed Tasks', state='disable', command=delete_completed_tasks)
     
+    # Enter information by checking for which dates in the week has tasks
     task_dict_sorted = dict(sorted(task_dict.items()))
     for day in dates_list:
         if day in task_dict_sorted:
             day_formatted = day.strftime("%d-%m-%Y")
+
+            # Input uncompleted tasks into the listbox first and enable complete button
             for task in task_dict_sorted[day]:
                 if '\u0336' not in task:
                     task_listbox.insert(END, f'{day_formatted}: {task}')
                     complete_button['state'] = 'normal'
+
+    # Run the same loop but select completed tasks so all completed tasks are below uncompleted ones                
     for day in dates_list:
         if day in task_dict_sorted:
             day_formatted = day.strftime("%d-%m-%Y")
             for task in task_dict_sorted[day]:
+
+                # Insert striked out task into tasklist and enable delete completed tasks button
                 if '\u0336' in task:
                     striked_first_part = strike(day_formatted) + strike(': ')
                     task_listbox.insert(END, f'{striked_first_part}{task}')
                     delete_completed_tasks_button['state'] = 'normal'
 
-    # If there are no tasks, update the label
-    if task_listbox.size() == 0:
-        task_complete_label.config(text='No tasks for the week')
+    check_if_listbox_empty(task_listbox, task_complete_label, 'week')
 
-
-    
+    # Pack labels, scrollbars, frames and button into tasks for the week window
+    task_list_label.pack(pady = 20)
     tasks_list_scrollbar.pack(side=RIGHT, fill=Y)
     tasks_list_frame.pack()
     task_listbox.pack(pady=15)
     task_complete_label.pack()
-    
-    
     complete_button.pack(pady=12)
     delete_completed_tasks_button.pack(pady=12)
     add_back_to_calendar_button(top)
 
+
+# MAIN WINDOW
 
 
 
