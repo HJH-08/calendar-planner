@@ -20,6 +20,6 @@ The user can:
 
 This shows how the user can add a task, and then see the task in the task list. Afterwhich, he can choose to complete the task and delete the task altogether.
 
-https://github.com/HJH-08/calendar-planner/blob/main/Calendar%20Planner%20video.mp4
+![](https://github.com/HJH-08/calendar-planner/blob/main/Calendar%20Planner%20recording.gif)
 
 
