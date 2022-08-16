@@ -1,4 +1,6 @@
-![](https://github.com/HJH-08/calendar-planner/blob/main/%F0%9F%93%86_Calendar_Planner.png =1280x640)
+
+<img src="https://github.com/HJH-08/calendar-planner/blob/main/%F0%9F%93%86_Calendar_Planner.png" width='1200'>
+
 
 # Calendar Planner
 
@@ -32,9 +34,9 @@ ___
        
 `Python` should be installed locally. Check [here](https://www.python.org/downloads/) to install depending on your OS.
 
->### Required Modules
->- `tkinter`
->- `tkcalendar`
+### Required Modules
+- `tkinter`
+- `tkcalendar`
 
 
 To install `tkinter` (if it's not already in built):
